@@ -23,7 +23,11 @@ export default function createReducer(handlers = {}, defaultState) {
 
   function reduce(state = defaultState, action) {
     if (action.type && handlers[action.type]) {
-      return handlers[action.type](state, opts.payload ? action.payload : action);
+      if (opts.payload) {
+        return handlers[action.type](state, action.payload, action.meta);
+      } else {
+        return handlers[action.type](state, action);
+      }
     } else {
       return state;
     }

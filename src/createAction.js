@@ -4,14 +4,15 @@ let types = {};
 
 const identity = arg => arg;
 
-export default function createAction(name, mapper = identity) {
+export default function createAction(name, payloadCreator = identity, metaCreator) {
   if (typeof name === 'function') {
-    mapper = name;
+    metaCreator = payloadCreator;
+    payloadCreator = name;
     name = undefined;
   }
 
-  if (typeof mapper !== 'function') {
-    mapper = identity;
+  if (typeof payloadCreator !== 'function') {
+    payloadCreator = identity;
   }
 
   if (name == null) {
@@ -30,15 +31,19 @@ export default function createAction(name, mapper = identity) {
 
   let actionStores = undefined;
 
-  function setupPayload(payload) {
-    return {
+  function setupPayload(args) {
+    const result = {
       type: action.type,
-      payload: payload
+      payload: payloadCreator(...args)
     };
+    if (typeof metaCreator === 'function') {
+      result.meta = metaCreator(...args);
+    }
+    return result;
   }
 
   function actionCreator(...args) {
-    const payloaded = setupPayload(mapper.apply(undefined, args));
+    const payloaded = setupPayload(args);
 
     if (Array.isArray(actionStores)) {
       return actionStores.map(store=> store.dispatch(payloaded));
